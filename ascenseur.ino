@@ -1,5 +1,5 @@
 #include <AccelStepper.h>
-#include <MultiStepper.h>
+
 //POSITION-------------------------------------------------------------------------------------------
 void moveTo(float distance);
 void end();
@@ -15,24 +15,13 @@ void editSpeed(unsigned int speed = 1);
 #define M1_PIN 10  // Broche M1 du moteur X
 #define M2_PIN 11  // Broche M2 du moteur X
 
-// Configuration des broches pour le moteur Y
-#define Y_STEP_PIN 2  // Broche STEP du moteur Y
-#define Y_DIR_PIN 5   // Broche DIR du moteur Y
-
 // Configuration des paramètres des moteurs
 #define MOTOR_STEPS 200  // Nombre de pas par tour du moteur
 #define RPM 50           // Vitesse de rotation en tours par minute
 #define MICROSTEPS 16    // Configuration du microstepping (1/16 de pas)
 
-// Définition des objets AccelStepper pour chaque moteur
+// Définition des objets AccelStepper pour le moteur X
 AccelStepper stepperX(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
-AccelStepper                                                                                                                                                                        (AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
-
-// Créer un objet MultiStepper pour synchroniser les moteurs
-MultiStepper multiStepper;
-// Garder en mémoire la position de l'ascenseur
-long position;
-
 
 //SETUP================================================================================================
 void setup() {
@@ -41,41 +30,32 @@ void setup() {
   while (!Serial) {}
   Serial.println("[setup] Starting ascensor programm");
 
-  //CONFIG MOTEURS--------------------------------------------------------------------------------------------
-
-  // Configuration des broches pour le moteur X
+  // CONFIGURATION DES BROCHES DU MOTEUR X --------------------------------------------------------------
   pinMode(ENABLE_PIN, OUTPUT);
 
-  // Configuration des paramètres des moteurs X et Y
+  // Configuration des paramètres du moteur X
   editSpeed(5);
 
-  // Activation des sorties des drivers pour les moteurs X et Y
+  // Activation du driver pour le moteur X
   digitalWrite(ENABLE_PIN, LOW);  // Activer le driver du moteur X (LOW = activé)
-  digitalWrite(ENABLE_PIN, LOW);  // Activer le driver du moteur Y (LOW = activé)
-
-  // Ajouter les moteurs à la MultiStepper (X et Y)
-  multiStepper.addStepper(stepperX);
-  multiStepper.addStepper(stepperY);
 }
 
 //LOOP==================================================================================================
 void loop() {
-  Serial.println("[loop] starting mooving");
-  moveTo(100);
-  stepperX.runSpeedToPosition();
+  Serial.println("[loop] starting moving");
+  moveTo(100);  // Déplacer le moteur X sur 100 mm
+  stepperX.runSpeedToPosition();  // Faire tourner le moteur à la vitesse spécifiée
 }
 
-//FONCTION================================================================================================
-// Fonction pour faire avancer le robot sur une distance donnée en mm
-void  moveTo(float distance) {
-  float distanceSteps = distance * MOTOR_STEPS * MICROSTEPS;  // TODO : Calcul du nombre de pas nécessaires
-  stepperX.setCurrentPosition(0);
-  stepperY.setCurrentPosition(0);
-  stepperX.moveTo(distanceSteps);  // Déplacer les moteurs vers les positions cibles
+//FONCTIONS================================================================================================
+// Fonction pour faire avancer le moteur X sur une distance donnée en mm
+void moveTo(float distance) {
+  float distanceSteps = distance * MOTOR_STEPS * MICROSTEPS;  // Calcul du nombre de pas nécessaires
+  stepperX.setCurrentPosition(0);  // Réinitialiser la position actuelle
+  stepperX.moveTo(distanceSteps);  // Déplacer le moteur vers la position cible
 }
-void editSpeed(unsigned int speed = 1){
-  stepperX.setMaxSpeed((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM/speed);
-  stepperX.setAcceleration((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM/(speed*4));
-  stepperY.setMaxSpeed((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM/speed);
-  stepperY.setAcceleration((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM/(speed*4));
+
+void editSpeed(unsigned int speed = 1) {
+  stepperX.setMaxSpeed((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM / speed);  // Définir la vitesse maximale
+  stepperX.setAcceleration((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM / (speed * 4));  // Définir l'accélération
 }
