@@ -1,5 +1,5 @@
 #include <AccelStepper.h>
-
+#include <MultiStepper.h>
 //POSITION-------------------------------------------------------------------------------------------
 void moveTo(float distance);
 void end();
@@ -7,21 +7,32 @@ void editSpeed(unsigned int speed = 1);
 
 //MOTEURS--------------------------------------------------------------------------------------------
 // Configuration des broches pour le moteur X
-#define X_STEP_PIN 3  // Broche STEP du moteur X
-#define X_DIR_PIN 6   // Broche DIR du moteur X
+#define X_STEP_PIN 2  // Broche STEP du moteur X
+#define X_DIR_PIN 5   // Broche DIR du moteur X
 #define ENABLE_PIN 8  // Broche ENABLE du moteur
 
 #define M0_PIN 9   // Broche M0 du moteur X
 #define M1_PIN 10  // Broche M1 du moteur X
 #define M2_PIN 11  // Broche M2 du moteur X
 
-// Configuration des paramètres des moteurs
-#define MOTOR_STEPS 200  // Nombre de pas par tour du moteur
-#define RPM 50           // Vitesse de rotation en tours par minute
-#define MICROSTEPS 16    // Configuration du microstepping (1/16 de pas)
+// Configuration des broches pour le moteur Y
+#define Y_STEP_PIN 3  // Broche STEP du moteur Y
+#define Y_DIR_PIN 6   // Broche DIR du moteur Y
 
-// Définition des objets AccelStepper pour le moteur X
+// Configuration des paramètres des moteurs
+#define MOTOR_STEPS 3200  // Nombre de pas par tour du moteur
+#define RPM 500000           // Vitesse de rotation en tours par minute
+#define MICROSTEPS 1    // Configuration du microstepping (1/16 de pas)
+
+// Définition des objets AccelStepper pour chaque moteur
 AccelStepper stepperX(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
+AccelStepper stepperY(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
+
+// Créer un objet MultiStepper pour synchroniser les moteurs
+MultiStepper multiStepper;
+// Garder en mémoire la position de l'ascenseur
+long position;
+
 
 //SETUP================================================================================================
 void setup() {
@@ -30,32 +41,41 @@ void setup() {
   while (!Serial) {}
   Serial.println("[setup] Starting ascensor programm");
 
-  // CONFIGURATION DES BROCHES DU MOTEUR X --------------------------------------------------------------
+  //CONFIG MOTEURS--------------------------------------------------------------------------------------------
+
+  // Configuration des broches pour le moteur X
   pinMode(ENABLE_PIN, OUTPUT);
 
-  // Configuration des paramètres du moteur X
+  // Configuration des paramètres des moteurs X et Y
   editSpeed(5);
 
-  // Activation du driver pour le moteur X
+  // Activation des sorties des drivers pour les moteurs X et Y
   digitalWrite(ENABLE_PIN, LOW);  // Activer le driver du moteur X (LOW = activé)
+  digitalWrite(ENABLE_PIN, LOW);  // Activer le driver du moteur Y (LOW = activé)
+
+  // Ajouter les moteurs à la MultiStepper (X et Y)
+  multiStepper.addStepper(stepperX);
+  multiStepper.addStepper(stepperY);
 }
 
 //LOOP==================================================================================================
 void loop() {
-  Serial.println("[loop] starting moving");
-  moveTo(100);  // Déplacer le moteur X sur 100 mm
-  stepperX.runSpeedToPosition();  // Faire tourner le moteur à la vitesse spécifiée
+  Serial.println("[loop] starting mooving");
+  moveTo(100);
+  stepperX.runSpeedToPosition();
 }
 
-//FONCTIONS================================================================================================
-// Fonction pour faire avancer le moteur X sur une distance donnée en mm
-void moveTo(float distance) {
-  float distanceSteps = distance * MOTOR_STEPS * MICROSTEPS;  // Calcul du nombre de pas nécessaires
-  stepperX.setCurrentPosition(0);  // Réinitialiser la position actuelle
-  stepperX.moveTo(distanceSteps);  // Déplacer le moteur vers la position cible
+//FONCTION================================================================================================
+// Fonction pour faire avancer le robot sur une distance donnée en mm
+void  moveTo(float distance) {
+  float distanceSteps = distance * MOTOR_STEPS * MICROSTEPS;  // TODO : Calcul du nombre de pas nécessaires
+  stepperX.setCurrentPosition(0);
+  stepperY.setCurrentPosition(0);
+  stepperX.moveTo(distanceSteps);  // Déplacer les moteurs vers les positions cibles
 }
-
-void editSpeed(unsigned int speed = 1) {
-  stepperX.setMaxSpeed((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM / speed);  // Définir la vitesse maximale
-  stepperX.setAcceleration((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM / (speed * 4));  // Définir l'accélération
+void editSpeed(unsigned int speed = 1){
+  stepperX.setMaxSpeed((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM/speed);
+  stepperX.setAcceleration((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM/(speed*4));
+  stepperY.setMaxSpeed((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM/speed);
+  stepperY.setAcceleration((float(MOTOR_STEPS * MICROSTEPS) / 60) * RPM/(speed*4));
 }
