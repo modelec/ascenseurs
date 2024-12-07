@@ -21,8 +21,8 @@ void editSpeed(unsigned int speed = 1);
 
 // Configuration des paramètres des moteurs
 #define MOTOR_STEPS 3200  // Nombre de pas par tour du moteur
-#define RPM 3000           // Vitesse de rotation en tours par minute
-#define MICROSTEPS 16    // Configuration du microstepping (1/16 de pas)
+#define RPM 3000             // Vitesse de rotation en tours par minute
+#define MICROSTEPS 1    // Configuration du microstepping (1/16 de pas)
 
 // Définition des objets AccelStepper pour chaque moteur
 AccelStepper stepperX(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
